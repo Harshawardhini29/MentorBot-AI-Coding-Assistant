@@ -1,0 +1,362 @@
+{% extends "base.html" %}
+{% block title %}Badges — MentorBot{% endblock %}
+
+{% block head %}
+<style>
+  .badges-page {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 48px 24px;
+  }
+
+  /* ── Page header ── */
+  .page-header {
+    margin-bottom: 40px;
+    animation: fadeUp 0.4s ease forwards;
+    opacity: 0;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .page-header h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.9rem;
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    margin-bottom: 6px;
+  }
+  .page-header p { color: var(--muted); font-size: 0.92rem; }
+
+  /* ── XP Progress ── */
+  .xp-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    margin-bottom: 32px;
+    animation: fadeUp 0.4s ease forwards 0.1s;
+    opacity: 0;
+  }
+  .xp-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+  }
+  .xp-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .xp-count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 2rem;
+    font-weight: 500;
+    color: var(--accent);
+    letter-spacing: -0.02em;
+  }
+  .xp-count span { font-size: 1rem; color: var(--muted); }
+
+  /* Progress track */
+  .progress-track {
+    position: relative;
+    height: 6px;
+    background: var(--surface2);
+    border-radius: 99px;
+    margin-bottom: 12px;
+    overflow: visible;
+  }
+  .progress-fill {
+    height: 100%;
+    border-radius: 99px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    box-shadow: 0 0 12px rgba(106,239,181,0.4);
+    transition: width 1s cubic-bezier(.34,1.56,.64,1);
+    position: relative;
+  }
+  .progress-fill::after {
+    content: '';
+    position: absolute;
+    right: -1px; top: 50%;
+    transform: translateY(-50%);
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 8px rgba(106,239,181,0.6);
+  }
+
+  /* Milestone markers */
+  .milestones {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+  .milestone-item { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .milestone-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--border2); }
+
+  .next-goal {
+    margin-top: 16px;
+    padding: 12px 16px;
+    background: var(--surface2);
+    border-radius: 9px;
+    font-size: 0.83rem;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .next-goal strong { color: var(--text); }
+
+  /* ── Badges grid ── */
+  .badges-section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin-bottom: 18px;
+    animation: fadeUp 0.4s ease forwards 0.18s;
+    opacity: 0;
+  }
+
+  .badges-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px;
+    margin-bottom: 40px;
+  }
+
+  .badge-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 28px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 14px;
+    transition: all 0.25s;
+    animation: fadeUp 0.4s ease forwards;
+    opacity: 0;
+  }
+  .badge-card:nth-child(1) { animation-delay: 0.2s; }
+  .badge-card:nth-child(2) { animation-delay: 0.27s; }
+  .badge-card:nth-child(3) { animation-delay: 0.34s; }
+  .badge-card:hover {
+    border-color: var(--border2);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow);
+  }
+
+  .badge-icon-wrap {
+    width: 68px; height: 68px;
+    border-radius: 18px;
+    display: grid;
+    place-items: center;
+    font-size: 30px;
+    position: relative;
+  }
+  .badge-icon-wrap.gold   { background: rgba(245,200,66,0.12);  border: 1px solid rgba(245,200,66,0.28); }
+  .badge-icon-wrap.silver { background: rgba(186,186,200,0.12); border: 1px solid rgba(186,186,200,0.24); }
+  .badge-icon-wrap.bronze { background: rgba(205,127,50,0.12);  border: 1px solid rgba(205,127,50,0.22); }
+
+  .badge-glow-gold   { box-shadow: 0 0 20px rgba(245,200,66,0.22); }
+  .badge-glow-silver { box-shadow: 0 0 20px rgba(186,186,200,0.18); }
+  .badge-glow-bronze { box-shadow: 0 0 20px rgba(205,127,50,0.18); }
+
+  .badge-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .badge-desc { font-size: 0.8rem; color: var(--muted); }
+
+  /* ── Locked badges ── */
+  .locked-section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin-bottom: 18px;
+    color: var(--muted);
+    animation: fadeUp 0.4s ease forwards 0.35s;
+    opacity: 0;
+  }
+
+  .locked-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px;
+  }
+  .locked-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 28px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 14px;
+    opacity: 0.45;
+    animation: fadeUp 0.4s ease forwards;
+  }
+  .locked-card:nth-child(1) { animation-delay: 0.4s; }
+  .locked-card:nth-child(2) { animation-delay: 0.46s; }
+  .locked-card:nth-child(3) { animation-delay: 0.52s; }
+
+  .locked-icon-wrap {
+    width: 68px; height: 68px;
+    border-radius: 18px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    display: grid;
+    place-items: center;
+    font-size: 26px;
+    filter: grayscale(1);
+  }
+  .lock-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .locked-name { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; }
+  .locked-req  { font-size: 0.8rem; color: var(--muted); }
+
+  /* Empty badges state */
+  .empty-badges {
+    text-align: center;
+    padding: 56px 24px;
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-lg);
+    color: var(--muted);
+    animation: fadeUp 0.4s ease forwards 0.2s;
+    opacity: 0;
+  }
+  .empty-badges .emoji { font-size: 36px; margin-bottom: 14px; display: block; }
+  .empty-badges h3 { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+  .empty-badges p { font-size: 0.86rem; line-height: 1.6; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="badges-page">
+
+  <div class="page-header">
+    <h1>Your Achievements</h1>
+    <p>Earn XP by chatting and completing daily challenges — unlock badges as you grow.</p>
+  </div>
+
+  <!-- ── XP Progress card ── -->
+  <div class="xp-section">
+    <div class="xp-top">
+      <div>
+        <div class="xp-label">Total XP Earned</div>
+        <div class="xp-count">{{ xp }}<span> xp</span></div>
+      </div>
+      <a href="/" class="btn btn-primary" style="font-size:0.85rem; padding: 9px 18px;">
+        <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        Earn more XP
+      </a>
+    </div>
+
+    <div class="progress-track">
+      <div class="progress-fill" id="progress-bar" style="width: 0%"></div>
+    </div>
+
+    <div class="milestones">
+      <div class="milestone-item"><div class="milestone-dot"></div><span>0</span></div>
+      <div class="milestone-item"><div class="milestone-dot"></div><span>50</span></div>
+      <div class="milestone-item"><div class="milestone-dot"></div><span>100</span></div>
+      <div class="milestone-item"><div class="milestone-dot"></div><span>200</span></div>
+    </div>
+
+    {% if xp < 50 %}
+    <div class="next-goal">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="color:var(--accent)"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+      <span>Next badge: <strong>⭐ Beginner</strong> — earn <strong>{{ 50 - xp }} more XP</strong> to unlock</span>
+    </div>
+    {% elif xp < 100 %}
+    <div class="next-goal">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="color:var(--accent)"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+      <span>Next badge: <strong>🌟 Intermediate</strong> — earn <strong>{{ 100 - xp }} more XP</strong> to unlock</span>
+    </div>
+    {% elif xp < 200 %}
+    <div class="next-goal">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="color:var(--accent)"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+      <span>Next badge: <strong>🏆 Pro Coder</strong> — earn <strong>{{ 200 - xp }} more XP</strong> to unlock</span>
+    </div>
+    {% else %}
+    <div class="next-goal" style="color: var(--accent);">
+      🎉 <span>You've unlocked <strong>all badges</strong>! You're a Pro Coder. Keep going!</span>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- ── Earned badges ── -->
+  {% if badges %}
+  <div class="badges-section-title">Earned Badges ({{ badges|length }})</div>
+  <div class="badges-grid">
+    {% for badge in badges %}
+    <div class="badge-card">
+      <div class="badge-icon-wrap {{ badge.color }} badge-glow-{{ badge.color }}">{{ badge.icon }}</div>
+      <div>
+        <div class="badge-name">{{ badge.name }}</div>
+        <div class="badge-desc">{{ badge.desc }}</div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-badges">
+    <span class="emoji">🎯</span>
+    <h3>No badges yet</h3>
+    <p>Chat with MentorBot or complete a daily challenge to start earning XP and unlock your first badge.</p>
+  </div>
+  {% endif %}
+
+  <!-- ── Locked badges ── -->
+  {% set locked = [] %}
+  {% if xp < 50  %}{% set _ = locked.append({'icon':'⭐','name':'Beginner','req':'Reach 50 XP'}) %}{% endif %}
+  {% if xp < 100 %}{% set _ = locked.append({'icon':'🌟','name':'Intermediate','req':'Reach 100 XP'}) %}{% endif %}
+  {% if xp < 200 %}{% set _ = locked.append({'icon':'🏆','name':'Pro Coder','req':'Reach 200 XP'}) %}{% endif %}
+
+  {% if locked %}
+  <div class="locked-section-title" style="margin-top: 36px;">Locked Badges</div>
+  <div class="locked-grid">
+    {% for b in locked %}
+    <div class="locked-card">
+      <div class="locked-icon-wrap">{{ b.icon }}</div>
+      <div class="lock-label">🔒 Locked</div>
+      <div>
+        <div class="locked-name">{{ b.name }}</div>
+        <div class="locked-req">{{ b.req }}</div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Animate progress bar on load
+  const xp = {{ xp }};
+  const maxXp = 200;
+  const pct = Math.min((xp / maxXp) * 100, 100);
+  setTimeout(() => {
+    const bar = document.getElementById('progress-bar');
+    if (bar) bar.style.width = pct + '%';
+  }, 200);
+</script>
+{% endblock %}

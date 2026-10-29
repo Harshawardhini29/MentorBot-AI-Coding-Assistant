@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block title %}Create Account — MentorBot{% endblock %}
+
+{% block head %}
+<style>
+  .auth-wrap {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .auth-brand {
+    position: relative;
+    background: linear-gradient(145deg, #0c0c14, #111120);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 48px;
+    overflow: hidden;
+  }
+  .auth-brand::before {
+    content: '';
+    position: absolute;
+    top: -100px; right: -100px;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(176,106,251,0.10) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .brand-logo { display: flex; align-items: center; gap: 12px; }
+  .brand-logo-box {
+    width: 42px; height: 42px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 12px;
+    display: grid; place-items: center;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800; font-size: 15px; color: #09090f;
+  }
+  .brand-logo-text { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.2rem; }
+  .brand-tagline {
+    font-family: 'Syne', sans-serif;
+    font-size: 2.6rem; font-weight: 800;
+    line-height: 1.15; letter-spacing: -0.03em; margin-bottom: 18px;
+  }
+  .brand-tagline span { color: var(--accent3); }
+  .brand-sub { color: var(--muted); font-size: 1rem; line-height: 1.65; max-width: 340px; }
+  .steps { display: flex; flex-direction: column; gap: 16px; position: relative; z-index: 1; }
+  .step {
+    display: flex; align-items: flex-start; gap: 14px;
+    font-size: 0.88rem;
+  }
+  .step-num {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    background: rgba(106,239,181,0.12);
+    border: 1px solid rgba(106,239,181,0.25);
+    display: grid; place-items: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+  .step-text { color: var(--muted); line-height: 1.5; }
+  .step-text strong { color: var(--text); }
+
+  .auth-form-panel {
+    background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    padding: 48px;
+  }
+  .auth-form-box { width: 100%; max-width: 380px; }
+  .auth-title { font-family: 'Syne', sans-serif; font-size: 1.8rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 6px; }
+  .auth-subtitle { color: var(--muted); font-size: 0.9rem; margin-bottom: 32px; }
+  .auth-subtitle a { color: var(--accent); text-decoration: none; }
+  .auth-subtitle a:hover { text-decoration: underline; }
+  .auth-fields { display: flex; flex-direction: column; gap: 18px; margin-bottom: 24px; }
+
+  @media (max-width: 768px) {
+    .auth-wrap { grid-template-columns: 1fr; }
+    .auth-brand { display: none; }
+    .auth-form-panel { padding: 24px; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-wrap">
+  <div class="auth-brand">
+    <div class="brand-logo">
+      <div class="brand-logo-box">MB</div>
+      <span class="brand-logo-text">MentorBot</span>
+    </div>
+    <div style="position: relative; z-index: 1;">
+      <h1 class="brand-tagline">Start your<br>coding <span>journey.</span></h1>
+      <p class="brand-sub">Join MentorBot and get personalized AI-powered mentorship designed exactly for your current skill level.</p>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><div class="step-text"><strong>Create your account</strong><br>Free to join, takes 30 seconds.</div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-text"><strong>Ask your first question</strong><br>MentorBot auto-detects your level.</div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-text"><strong>Earn XP & badges</strong><br>Track your progress as you grow.</div></div>
+    </div>
+  </div>
+
+  <div class="auth-form-panel">
+    <div class="auth-form-box">
+      <h2 class="auth-title">Create account</h2>
+      <p class="auth-subtitle">Already have one? <a href="/login">Sign in →</a></p>
+
+      {% if error %}
+      <div class="alert alert-error">{{ error }}</div>
+      {% endif %}
+
+      <form method="POST">
+        <div class="auth-fields">
+          <div class="form-group">
+            <label class="form-label">Username</label>
+            <input type="text" name="username" class="form-input" placeholder="choose_a_username" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input type="password" name="password" class="form-input" placeholder="create a strong password" required />
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%;">
+          Create Account
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

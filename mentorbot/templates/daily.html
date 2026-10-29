@@ -1,0 +1,549 @@
+{% extends "base.html" %}
+{% block title %}Daily Challenge — MentorBot{% endblock %}
+
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+  .challenge-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 36px 24px;
+  }
+
+  /* ── Page header ── */
+  .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    animation: fadeUp 0.4s ease forwards;
+    opacity: 0;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  
+  .page-header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .page-icon {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(245,200,66,0.18), rgba(245,200,66,0.06));
+    border: 1px solid rgba(245,200,66,0.28);
+    display: grid;
+    place-items: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .page-header-text h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+  .page-header-text p {
+    color: var(--muted);
+    font-size: 0.88rem;
+    margin-top: 2px;
+  }
+
+  /* ── Split Layout ── */
+  .challenge-container {
+    display: grid;
+    grid-template-columns: 1fr 1.1fr;
+    gap: 28px;
+    margin-bottom: 24px;
+    animation: fadeUp 0.45s ease forwards 0.1s;
+    opacity: 0;
+  }
+  @media (max-width: 900px) {
+    .challenge-container {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* ── Challenge instructions card ── */
+  .instructions-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .card-header {
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface2);
+  }
+  .card-header h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .date-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 3px 8px;
+    border-radius: 6px;
+  }
+  
+  .instructions-body {
+    padding: 24px;
+    flex: 1;
+    overflow-y: auto;
+    max-height: 600px;
+  }
+  
+  .challenge-md {
+    font-size: 0.95rem;
+    line-height: 1.7;
+    color: var(--text);
+  }
+  .challenge-md h1, .challenge-md h2, .challenge-md h3 {
+    font-family: 'Syne', sans-serif;
+    margin: 20px 0 10px;
+  }
+  .challenge-md h2 { font-size: 1.1rem; border-bottom: 1px solid var(--border); padding-bottom: 4px; }
+  .challenge-md p { margin-bottom: 14px; }
+  .challenge-md code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85em;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 2px 6px;
+    color: var(--accent);
+  }
+  .challenge-md pre {
+    background: #0d0d13;
+    border: 1px solid var(--border);
+    padding: 16px;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin-bottom: 16px;
+  }
+  .challenge-md pre code {
+    background: transparent;
+    border: none;
+    padding: 0;
+    color: var(--text);
+  }
+  .challenge-md ul, .challenge-md ol {
+    margin-bottom: 14px;
+    padding-left: 20px;
+  }
+  .challenge-md li {
+    margin-bottom: 6px;
+  }
+
+  .instructions-actions {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 12px;
+    background: var(--surface2);
+  }
+
+  /* ── IDE editor card ── */
+  .editor-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 550px;
+  }
+  .editor-header {
+    background: var(--surface2);
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .editor-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .editor-dots {
+    display: flex;
+    gap: 5px;
+  }
+  .editor-dots span {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .dot-r { background: #ff5f56; }
+  .dot-y { background: #ffbd2e; }
+  .dot-g { background: #27c93f; }
+  .editor-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.76rem;
+    color: var(--muted);
+  }
+  
+  .editor-textarea {
+    background: #0b0b10;
+    border: none;
+    outline: none;
+    color: #e8e8f0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.88rem;
+    padding: 20px;
+    resize: vertical;
+    line-height: 1.6;
+    flex: 1;
+    min-height: 250px;
+  }
+  
+  .editor-actions {
+    padding: 14px 20px;
+    border-top: 1px solid var(--border);
+    background: var(--surface2);
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 12px;
+  }
+
+  /* ── Console / Terminal Area ── */
+  .console-panel {
+    background: #06060a;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    min-height: 200px;
+  }
+  .console-header {
+    background: #0d0d12;
+    padding: 8px 20px;
+    border-bottom: 1px solid var(--border);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .console-body {
+    padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem;
+    line-height: 1.6;
+    color: var(--text);
+    overflow-y: auto;
+    max-height: 250px;
+    flex: 1;
+  }
+  .console-placeholder {
+    color: var(--muted);
+    font-style: italic;
+  }
+  
+  /* Status Badges */
+  .status-badge {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .status-unsolved { background: rgba(245,200,66,0.12); color: var(--gold); border: 1px solid rgba(245,200,66,0.22); }
+  .status-solved { background: rgba(106,239,181,0.12); color: var(--accent); border: 1px solid rgba(106,239,181,0.22); }
+  
+  /* spinner spinner */
+  .spinner {
+    width: 12px; height: 12px;
+    border: 2px solid rgba(9,9,15,0.2);
+    border-radius: 50%;
+    border-top-color: #09090f;
+    animation: spin 0.8s linear infinite;
+    display: inline-block;
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* ── Tip card ── */
+  .tip-card {
+    padding: 16px 20px;
+    border-radius: 12px;
+    background: rgba(61,156,240,0.06);
+    border: 1px solid rgba(61,156,240,0.15);
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    animation: fadeUp 0.4s ease forwards 0.2s;
+    opacity: 0;
+    margin-bottom: 24px;
+  }
+  .tip-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+  .tip-text {
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: #8ec8f5;
+  }
+  .tip-text strong { color: var(--accent2); }
+
+  /* Output markdown classes */
+  .feedback-md {
+    color: #e8e8f0;
+  }
+  .feedback-md code {
+    font-family: 'JetBrains Mono', monospace;
+    background: #181824;
+    color: var(--accent);
+    padding: 1px 5px;
+    border-radius: 4px;
+  }
+  .feedback-md pre {
+    background: #111116;
+    border: 1px solid rgba(255,255,255,0.05);
+    padding: 12px;
+    border-radius: 6px;
+    overflow-x: auto;
+    margin: 8px 0;
+  }
+  .feedback-md pre code {
+    background: transparent;
+    padding: 0;
+    color: #e8e8f0;
+  }
+  .feedback-md p { margin-bottom: 10px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="challenge-page">
+
+  <div class="page-header">
+    <div class="page-header-left">
+      <div class="page-icon">⚡</div>
+      <div class="page-header-text">
+        <h1>Daily Challenge</h1>
+        <p>Solve coding problems, get instant AI analysis, and level up your skills.</p>
+      </div>
+    </div>
+    
+    <div>
+      <span id="challenge-status-badge" class="status-badge {% if solved %}status-solved{% else %}status-unsolved{% endif %}">
+        {% if solved %}
+          ✓ Solved (+20 XP Claimed)
+        {% else %}
+          ★ Unsolved (+20 XP)
+        {% endif %}
+      </span>
+    </div>
+  </div>
+
+  <div class="challenge-container">
+    <!-- Left panel: instructions -->
+    <div class="instructions-card">
+      <div class="card-header">
+        <h2>
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="color: var(--gold)"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          Problem Statement
+        </h2>
+        <div class="date-badge">{{ date }}</div>
+      </div>
+      
+      <div class="instructions-body">
+        <div class="challenge-md" id="challenge-instructions-area">{{ challenge }}</div>
+      </div>
+      
+      <div class="instructions-actions">
+        <a href="/" class="btn btn-secondary" style="font-size:0.82rem; padding: 8px 16px;">
+          <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+          Discuss in Chat
+        </a>
+        <a href="/daily_challenge" class="btn btn-secondary" style="font-size:0.82rem; padding: 8px 16px;">
+          <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          Reload
+        </a>
+      </div>
+    </div>
+
+    <!-- Right panel: editor & console -->
+    <div class="editor-card">
+      <div class="editor-header">
+        <div class="editor-left">
+          <div class="editor-dots">
+            <span class="dot-r"></span>
+            <span class="dot-y"></span>
+            <span class="dot-g"></span>
+          </div>
+          <span class="editor-title">editor.py</span>
+        </div>
+        <div class="editor-title font-mono" style="font-size: 0.7rem; color: var(--accent);">Python 3 / JS</div>
+      </div>
+      
+      <textarea id="code-editor" class="editor-textarea" placeholder="# Type or paste your code solution here...&#10;def solve():&#10;    # Write your solution code here&#10;    pass" spellcheck="false">{{ code_submission }}</textarea>
+      
+      <div class="console-panel">
+        <div class="console-header">
+          <span>AI Feedback Console</span>
+          <span id="console-status" style="color: var(--muted);">idle</span>
+        </div>
+        <div class="console-body" id="console-output">
+          {% if feedback %}
+            <div class="feedback-md" id="console-initial-feedback">{{ feedback }}</div>
+          {% else %}
+            <span class="console-placeholder">Submit your code above. The AI mentor will analyze correctness, execution safety, complexity, and styling.</span>
+          {% endif %}
+        </div>
+      </div>
+      
+      <div class="editor-actions">
+        <span style="font-size: 0.78rem; color: var(--muted); margin-right: auto;" id="xp-alert-text"></span>
+        <button id="btn-submit-solution" class="btn btn-primary" style="font-size: 0.85rem; padding: 9px 18px;">
+          <span id="btn-text">Verify Solution</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="tip-card">
+    <div class="tip-icon">💡</div>
+    <div class="tip-text">
+      <strong>Pro tip:</strong> Stuck? Write what you have, submit it, and check the <strong>AI Feedback Console</strong>. The mentor will analyze your logic, explain where you are stuck, and provide hints without giving away the final answer!
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Render Markdown for challenge instructions on load
+  const instructionsArea = document.getElementById('challenge-instructions-area');
+  if (instructionsArea && typeof marked !== 'undefined') {
+    instructionsArea.innerHTML = marked.parse(instructionsArea.textContent.trim());
+  }
+
+  // Render Markdown for initial feedback if it exists
+  const initialFeedback = document.getElementById('console-initial-feedback');
+  if (initialFeedback && typeof marked !== 'undefined') {
+    initialFeedback.innerHTML = marked.parse(initialFeedback.textContent.trim());
+  }
+
+  // Handle solution submit via AJAX
+  const submitBtn = document.getElementById('btn-submit-solution');
+  const codeEditor = document.getElementById('code-editor');
+  const consoleOutput = document.getElementById('console-output');
+  const consoleStatus = document.getElementById('console-status');
+  const badge = document.getElementById('challenge-status-badge');
+  const xpAlert = document.getElementById('xp-alert-text');
+  const navXpPill = document.getElementById('nav-xp-pill');
+
+  if (submitBtn && codeEditor && consoleOutput) {
+    submitBtn.addEventListener('click', () => {
+      const code = codeEditor.value.trim();
+      if (!code) {
+        consoleOutput.innerHTML = '<span style="color: var(--danger);">Error: Please write some code before submitting.</span>';
+        return;
+      }
+
+      // Enter loading state
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="spinner"></span> Verifying...';
+      consoleStatus.textContent = 'analyzing code';
+      consoleStatus.style.color = 'var(--gold)';
+      consoleOutput.innerHTML = '<span style="color: var(--muted); animation: pulse 1s infinite;">[SYSTEM] Transmitting code to MentorBot engine...<br>[AI] Reviewing logic correctness...<br>[AI] Running complexity and style diagnostics...</span>';
+
+      fetch('/solve_challenge', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ code: code })
+      })
+      .then(res => {
+        if (!res.ok) {
+          throw new Error('Server responded with an error status: ' + res.status);
+        }
+        return res.json();
+      })
+      .then(data => {
+        // Reset button state
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Verify Solution';
+        
+        if (data.success) {
+          consoleStatus.textContent = 'verification success';
+          consoleStatus.style.color = 'var(--accent)';
+          
+          // Print feedback using marked.js
+          if (typeof marked !== 'undefined') {
+            consoleOutput.innerHTML = '<div class="feedback-md">' + marked.parse(data.feedback) + '</div>';
+          } else {
+            consoleOutput.textContent = data.feedback;
+          }
+          
+          // Update status badge
+          badge.className = 'status-badge status-solved';
+          badge.textContent = '✓ Solved (+20 XP Claimed)';
+          
+          // Update navbar XP pill
+          if (navXpPill) {
+            navXpPill.textContent = '⚡ ' + data.new_xp + ' XP';
+          }
+          
+          // Display XP alert message
+          if (data.xp_awarded > 0) {
+            xpAlert.style.color = 'var(--accent)';
+            xpAlert.textContent = '🎉 Successfully verified! Awarded +20 XP!';
+          } else {
+            xpAlert.style.color = 'var(--accent)';
+            xpAlert.textContent = '✓ Verified! (XP already claimed)';
+          }
+        } else {
+          consoleStatus.textContent = 'verification failed';
+          consoleStatus.style.color = 'var(--danger)';
+          
+          // Print feedback
+          if (typeof marked !== 'undefined') {
+            consoleOutput.innerHTML = '<div class="feedback-md">' + marked.parse(data.feedback) + '</div>';
+          } else {
+            consoleOutput.textContent = data.feedback;
+          }
+          
+          xpAlert.style.color = 'var(--danger)';
+          xpAlert.textContent = '❌ Solution incomplete. Check feedback below.';
+        }
+      })
+      .catch(err => {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Verify Solution';
+        consoleStatus.textContent = 'connection error';
+        consoleStatus.style.color = 'var(--danger)';
+        consoleOutput.innerHTML = '<span style="color: var(--danger);">Error: Failed to connect to server. Details: ' + err.message + '</span>';
+        xpAlert.style.color = 'var(--danger)';
+        xpAlert.textContent = '⚠️ Network error during verification.';
+      });
+    });
+  }
+</script>
+{% endblock %}

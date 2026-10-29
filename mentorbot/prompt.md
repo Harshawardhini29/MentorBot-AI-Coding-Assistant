@@ -1,0 +1,4 @@
+This is a core python based FSD + AI integrated project, end-users: Students. This is not a production-grade project. do not over-engineer any solution. Plan should follow System design principles, DSA Optimization, OOPs principles, DBMS, ACID Compliance, AI & LLMs procedures and engineering Principles
+build code with phase wise segregation and split it further with micro tasks so that agent can understand step-by-step code development for each phase
+plan requested is for coding agent like anti-gravity [do not specify], so build each phase with instructions on how to approach process of code building with exact knowledge. mostly no code needed. end each phase with checklist to track progress and instruct to look for error in modified code on each phase & finally solve them and update checklist
+goal: working, fully functional project no issues, no bugs, no flaws. Zero errors, zero bugs, zero flaws
